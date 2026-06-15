@@ -14,11 +14,15 @@
   --sans: "Inter", -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-* { box-sizing: border-box; }
+* { 
+  box-sizing: border-box; 
+  padding: 0;
+  border: 0;
+}
 
 body {
   margin: 0;
-  font-family: var(--sans);
+  font-family: var(--mono);
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -37,6 +41,8 @@ header {
   display: flex;
   align-items: center;
   gap: 10px;
+
+  text-decoration: none;
 }
 
 .logo-mark {
