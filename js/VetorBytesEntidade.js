@@ -1,3 +1,5 @@
+//const ByteStream = require("./ByteStream");
+
 const VetorBytesEntidade = (() => {
     const TAMANHO_CONTADOR = 4;
     const TAMANHO_ANCORA = 8;
@@ -123,5 +125,79 @@ const VetorBytesEntidade = (() => {
         criarVetorInicial,
         obterMetricas,
         normalizarAtributos
+    };
+})();
+
+
+
+const ConversorDinamico = (() => {
+function toByteArray(atributos, valores) {
+    let bytesDoRegistro = [];
+    // Passa de atributo em atributo olhando o que ele é
+    atributos.forEach((atributo, i) => {
+        const valorReal = valores[i];
+        let bytesDoCampo;
+
+        // Escolhe o conversor certo do ByteStream baseado no tipo
+        if (atributo.tipo === "Integer") { //caso inteiro
+            bytesDoCampo = ByteStream.writeInt(Number(valorReal) || 0);
+        }else if (atributo.tipo === "Float") { //caso real
+            bytesDoCampo = ByteStream.writeFloat(Number(valorReal) || 0.0);
+        }else if (atributo.tipo === "Boolean") { //caso boolean
+            // Garante que vire true ou false de verdade
+            const bool = valorReal === true || valorReal === "true" || valorReal === 1;
+            bytesDoCampo = ByteStream.writeBoolean(bool);
+        }else {  //caso string
+            bytesDoCampo = ByteStream.writeString(String(valorReal ?? ""));
+        }
+
+        // Adiciona os bytes desse campo no final do registro
+        bytesDoRegistro.push(...bytesDoCampo);
+    });
+
+    return bytesDoRegistro; // Retorna o vetor de bytes
+}
+
+
+
+
+function fromByteArray(atributos, vetorDeBytes) {
+    let posicaoInicial = 0;
+    let valoresReconstruidos = [];
+    let posicaoAtual = posicaoInicial;
+
+    // Passa pelos atributos sabendo exatamente a ordem em que foram gravados
+    atributos.forEach((atributo) => {
+        let resultado;
+
+        if (atributo.tipo === "Integer") {
+            resultado = ByteStream.readInt(vetorDeBytes, posicaoAtual);
+            posicaoAtual += 4; 
+        } 
+        else if (atributo.tipo === "Float") {
+            resultado = ByteStream.readFloat(vetorDeBytes, posicaoAtual);
+            posicaoAtual += 4; 
+        } 
+        else if (atributo.tipo === "Boolean") {
+            resultado = ByteStream.readBoolean(vetorDeBytes, posicaoAtual);
+            posicaoAtual += 1; 
+        } 
+        else { 
+            resultado = ByteStream.readString(vetorDeBytes, posicaoAtual);
+            // Para saber quantos bytes pular na String: 
+            // Pegamos 2 bytes do tamanho + o tamanho real que o texto ocupou em bytes
+            const tamanhoDoTextoEmBytes = ByteStream.readShort(vetorDeBytes, posicaoAtual);
+            posicaoAtual += 2 + tamanhoDoTextoEmBytes;
+        }
+
+        // Guarda o valor traduzido na nossa lista
+        valoresReconstruidos.push(resultado);
+    });
+
+    return valoresReconstruidos; // Retorna os valores normais de volta ([ "Monitor", 1250.50, true ])
+}
+return {
+        toByteArray,
+        fromByteArray
     };
 })();

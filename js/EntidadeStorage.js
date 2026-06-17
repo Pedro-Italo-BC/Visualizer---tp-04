@@ -46,7 +46,7 @@ const EntidadeStorage = (() => {
         const chave = obterChaveArquivo(entidade);
         const vetor = Array.isArray(entidade.vetorBytes)
             ? entidade.vetorBytes
-            : VetorBytesEntidade.criarVetorInicial();
+            : VetorBytesEntidade.criarVetorInicial(); //////////////////////alterar
 
         localStorage.setItem(chave, JSON.stringify(vetor));
         return vetor;
