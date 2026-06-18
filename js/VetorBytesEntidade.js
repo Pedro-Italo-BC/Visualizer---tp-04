@@ -1,4 +1,4 @@
-const ByteStream = require("./ByteStream");
+const ByteStreamAPI = typeof ByteStream !== "undefined" ? ByteStream : require("./ByteStream");
 
 const VetorBytesEntidade = (() => {
     const TAMANHO_CONTADOR = 4;
@@ -140,15 +140,15 @@ function toByteArray(atributos, valores) {
 
         // Escolhe o conversor certo do ByteStream baseado no tipo
         if (atributo.tipo === "Integer") { //caso inteiro
-            bytesDoCampo = ByteStream.writeInt(Number(valorReal) || 0);
+            bytesDoCampo = ByteStreamAPI.writeInt(Number(valorReal) || 0);
         }else if (atributo.tipo === "Float") { //caso real
-            bytesDoCampo = ByteStream.writeFloat(Number(valorReal) || 0.0);
+            bytesDoCampo = ByteStreamAPI.writeFloat(Number(valorReal) || 0.0);
         }else if (atributo.tipo === "Boolean") { //caso boolean
             // Garante que vire true ou false de verdade
             const bool = valorReal === true || valorReal === "true" || valorReal === 1;
-            bytesDoCampo = ByteStream.writeBoolean(bool);
+            bytesDoCampo = ByteStreamAPI.writeBoolean(bool);
         }else {  //caso string
-            bytesDoCampo = ByteStream.writeString(String(valorReal ?? ""));
+            bytesDoCampo = ByteStreamAPI.writeString(String(valorReal ?? ""));
         }
 
         // Adiciona os bytes desse campo no final do registro
@@ -171,22 +171,22 @@ function fromByteArray(atributos, vetorDeBytes) {
         let resultado;
 
         if (atributo.tipo === "Integer") {
-            resultado = ByteStream.readInt(vetorDeBytes, posicaoAtual);
+            resultado = ByteStreamAPI.readInt(vetorDeBytes, posicaoAtual);
             posicaoAtual += 4; 
         } 
         else if (atributo.tipo === "Float") {
-            resultado = ByteStream.readFloat(vetorDeBytes, posicaoAtual);
+            resultado = ByteStreamAPI.readFloat(vetorDeBytes, posicaoAtual);
             posicaoAtual += 4; 
         } 
         else if (atributo.tipo === "Boolean") {
-            resultado = ByteStream.readBoolean(vetorDeBytes, posicaoAtual);
+            resultado = ByteStreamAPI.readBoolean(vetorDeBytes, posicaoAtual);
             posicaoAtual += 1; 
         } 
         else { 
-            resultado = ByteStream.readString(vetorDeBytes, posicaoAtual);
+            resultado = ByteStreamAPI.readString(vetorDeBytes, posicaoAtual);
             // Para saber quantos bytes pular na String: 
             // Pegamos 2 bytes do tamanho + o tamanho real que o texto ocupou em bytes
-            const tamanhoDoTextoEmBytes = ByteStream.readShort(vetorDeBytes, posicaoAtual);
+            const tamanhoDoTextoEmBytes = ByteStreamAPI.readShort(vetorDeBytes, posicaoAtual);
             posicaoAtual += 2 + tamanhoDoTextoEmBytes;
         }
 

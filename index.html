@@ -55,6 +55,20 @@
   <!-- Dados do arquivo -->
   <section>
     <h2 class="panel-title">Dados do arquivo</h2>
+    <div class="file-info-bar">
+      <div>
+        <span class="file-info-label">Entidade</span>
+        <strong id="hex-entity-name">Nenhuma entidade selecionada</strong>
+      </div>
+      <div>
+        <span class="file-info-label">Arquivo</span>
+        <strong id="hex-file-key">-</strong>
+      </div>
+      <div>
+        <span class="file-info-label">Bytes</span>
+        <strong id="hex-byte-count">0</strong>
+      </div>
+    </div>
     <div class="hexview">
       <div class="hex-gutter">
         <div class="hex-gutter-icons">
@@ -107,14 +121,42 @@
   <div class="crud-divider"></div>
 
   <div class="crud-actions">
-    <button class="crud-btn create">CREATE</button>
-    <button class="crud-btn read">READ</button>
-    <button class="crud-btn update">UPDATE</button>
-    <button class="crud-btn delete">DELETE</button>
+    <button class="crud-btn create" data-crud-action="create">CREATE</button>
+    <button class="crud-btn read" data-crud-action="read">READ</button>
+    <button class="crud-btn update" data-crud-action="update">UPDATE</button>
+    <button class="crud-btn delete" data-crud-action="delete">DELETE</button>
   </div>
 
 </div>
 </main>
+
+<div class="back-modal" id="crud-modal" aria-hidden="true">
+  <div class="modal crud-modal" role="dialog" aria-modal="true" aria-labelledby="crud-modal-title">
+    <div class="modal-header">
+      <div>
+        <h1 id="crud-modal-title">CRUD</h1>
+        <p class="modal-subtitle" id="crud-modal-subtitle"></p>
+      </div>
+
+      <button class="modal-close" id="close-crud-modal" type="button" aria-label="Fechar">
+        &times;
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-message" id="crud-form-message" aria-live="polite"></div>
+      <form class="crud-form" id="crud-form"></form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="default-btn" id="collect-crud-data" type="button">
+        Obter dados
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toast-stack" aria-live="polite"></div>
 
 <script src="js/script.js"></script>
 </body>
