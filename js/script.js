@@ -65,6 +65,43 @@ function renderizarCabecalhoHex() {
   }
 }
 
+function renderizarRegistros() {
+
+    const entidade = obterEntidadeSelecionada();
+
+    console.log("ENTIDADE:", entidade);
+
+    decoderContent.innerHTML = "";
+
+    if (!entidade) {
+        decoderContent.innerHTML =
+            "<p>Nenhuma entidade selecionada.</p>";
+        return;
+    }
+
+    const registros = ReadArquivo.read(entidade.id);
+
+    console.log("REGISTROS:", registros);
+
+    if (!registros || registros.length === 0) {
+        decoderContent.innerHTML =
+            "<p>Nenhum registro encontrado.</p>";
+        return;
+    }
+
+    registros.forEach(registro => {
+
+        const div = document.createElement("div");
+
+        div.innerHTML = `
+            <h3>ID ${registro.id}</h3>
+            <pre>${JSON.stringify(registro, null, 2)}</pre>
+        `;
+
+        decoderContent.appendChild(div);
+    });
+}
+
 function criarOffsetHex(valor) {
   const offset = document.createElement("div");
   offset.className = "hex-offset";
@@ -432,11 +469,20 @@ document.querySelectorAll(".decoder-tab").forEach((tab) => {
     tab.classList.add("active");
     estadoCrud.abaAtual = tab.dataset.tab;
 
-    if (tab.dataset.tab === "entidades") {
-      renderizarEntidadesDecoder();
-    } else {
-      decoderContent.classList.remove("entities-decoder");
-      renderDecoder();
+      switch (tab.dataset.tab) {
+
+      case "entidades":
+        renderizarEntidadesDecoder();
+        break;
+
+      case "registros":
+        renderizarRegistros();
+        break;
+
+      default:
+        decoderContent.classList.remove("entities-decoder");
+        renderDecoder();
+        break;
     }
   });
 });
@@ -448,7 +494,13 @@ decoderContent.addEventListener("click", (evento) => {
   estadoCrud.entidadeSelecionadaId = card.dataset.id;
   atualizarDadosArquivoSelecionado();
   renderizarEntidadesDecoder();
-  if (estadoCrud.abaAtual === "decodificador") renderDecoder();
+  if (estadoCrud.abaAtual === "decodificador") {
+    renderDecoder();
+  }
+
+  if (estadoCrud.abaAtual === "registros") {
+      renderizarRegistros();
+  }
 });
 
 document.querySelectorAll(".crud-btn[data-crud-action]").forEach((botao) => {
