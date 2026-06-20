@@ -1,0 +1,80 @@
+/* ===========================
+   TUTORIAL
+=========================== */
+
+.tutorial-page {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 32px;
+}
+
+.tutorial-hero,
+.tutorial-card {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 32px;
+    align-items: center;
+
+    background: var(--panel-bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    padding: 32px;
+}
+
+.tutorial-card.reverse {
+    grid-template-columns: 1fr 1.4fr;
+}
+
+.tutorial-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tutorial-content h2 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.tutorial-content p,
+.tutorial-content li {
+    line-height: 1.8;
+    font-size: 15px;
+}
+
+.tutorial-content ul,
+.tutorial-content ol {
+    padding-left: 24px;
+}
+
+.tutorial-card img,
+.tutorial-hero img {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.tutorial-hero h1 {
+    margin: 0 0 16px;
+    font-size: 2.5rem;
+}
+
+.tutorial-hero p {
+    line-height: 1.9;
+    font-size: 16px;
+}
+
+@media (max-width: 900px) {
+
+    .tutorial-card,
+    .tutorial-card.reverse,
+    .tutorial-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .tutorial-page {
+        padding: 20px;
+    }
+}

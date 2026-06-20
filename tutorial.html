@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Visualizer</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+
+<header>
+    <a href="./index.html" class="logo">
+  <img src="img/logo.svg" alt="Visualizer" class="logo-img">
+
+  <div class="logo-text">
+    VISUAL<span class="accent-1">I</span><span class="accent-2">Z</span><span class="accent-3">ER</span>
+  </div>
+</a>
+
+  <nav>
+    <a href="dados.html" class="nav-item" data-view="dados">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <ellipse cx="12" cy="5" rx="8" ry="3"/>
+        <path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/>
+        <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/>
+      </svg>
+      Dados
+    </a>
+
+    <a href="entidades.html" class="nav-item" data-view="entidades">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"/>
+        <line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/>
+        <line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+      Entidades
+    </a>
+
+    <a href="index.html" class="nav-item" data-view="inicio">
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+        <path d="M3 10.5L12 3l9 7.5"/>
+        <path d="M5 9.5V21h14V9.5"/>
+        <path d="M9 21v-6h6v6"/>
+    </svg>
+    Início
+</a>
+  </nav>
+</header>
+  
+<main class="tutorial-page">
+
+    <section class="tutorial-hero">
+        <div>
+            <h1>Guia do Visualizer</h1>
+            <p>
+                O Visualizer é uma ferramenta educacional para visualizar como
+                informações são armazenadas em arquivos de dados, permitindo
+                acompanhar operações CRUD e a organização interna dos registros.
+            </p>
+        </div>
+
+        <img src="img/home.png" alt="Tela inicial">
+    </section>
+
+    <section class="tutorial-card">
+        <div class="tutorial-content">
+            <h2>O que é o Visualizer?</h2>
+
+            <p>
+                O sistema foi desenvolvido para demonstrar de forma visual o
+                funcionamento de arquivos de dados utilizados em bancos de dados.
+            </p>
+
+            <p>
+                Cada entidade criada gera um arquivo próprio e os registros
+                inseridos podem ser acompanhados através da visualização
+                hexadecimal e do decodificador.
+            </p>
+        </div>
+    </section>
+
+    <section class="tutorial-card reverse">
+        <img src="img/entidades.png" alt="Entidades">
+
+        <div class="tutorial-content">
+            <h2>Tela de Entidades</h2>
+
+            <p>
+                Nesta tela são definidas as entidades e seus atributos.
+            </p>
+
+            <ul>
+                <li>Criar entidades</li>
+                <li>Adicionar atributos</li>
+                <li>Definir tipos de dados</li>
+                <li>Gerenciar estruturas de armazenamento</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="tutorial-card">
+        <div class="tutorial-content">
+            <h2>Tela de Dados</h2>
+
+            <p>
+                Exibe os bytes armazenados no arquivo da entidade.
+            </p>
+
+            <ul>
+                <li>Visualização hexadecimal</li>
+                <li>Decodificação dos registros</li>
+                <li>Monitoramento das operações CRUD</li>
+                <li>Análise da estrutura física do arquivo</li>
+            </ul>
+        </div>
+
+        <img src="img/tutorial/dados.png" alt="Dados">
+    </section>
+
+    <section class="tutorial-card reverse">
+        <img src="img/create.png" alt="Create">
+
+        <div class="tutorial-content">
+            <h2>CREATE</h2>
+
+            <p>
+                O CREATE adiciona um novo registro ao arquivo da entidade.
+            </p>
+
+            <ol>
+                <li>O formulário coleta os valores.</li>
+                <li>Os dados são convertidos para bytes.</li>
+                <li>Um ID é gerado automaticamente.</li>
+                <li>O registro é armazenado no arquivo.</li>
+                <li>O visualizador é atualizado.</li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="tutorial-card">
+        <div class="tutorial-content">
+            <h2>READ</h2>
+
+            <p>
+                Permite localizar e visualizar registros já armazenados.
+            </p>
+        </div>
+
+        <img src="img/tutorial/read.png" alt="Read">
+    </section>
+
+    <section class="tutorial-card reverse">
+        <img src="img/tutorial/update.png" alt="Update">
+
+        <div class="tutorial-content">
+            <h2>UPDATE</h2>
+
+            <p>
+                Atualiza registros existentes, preservando a estrutura do
+                arquivo conforme as regras definidas.
+            </p>
+        </div>
+    </section>
+
+    <section class="tutorial-card">
+        <div class="tutorial-content">
+            <h2>DELETE</h2>
+
+            <p>
+                Remove logicamente um registro através da utilização da lápide,
+                permitindo reutilização futura do espaço.
+            </p>
+        </div>
+
+        <img src="img/tutorial/delete.png" alt="Delete">
+    </section>
+
+</main>
+
+
+</body>
+</html>
