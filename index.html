@@ -91,6 +91,9 @@
         <div id="hex-rows"></div>
       </div>
     </div>
+    <div class="selection-info" id="selection-info">
+      Passe o cursor por um byte ou registro para ver detalhes.
+    </div>
   </section>
 
   <!-- Decodificador -->
@@ -123,9 +126,6 @@
 
   <div class="crud-actions">
     <button class="crud-btn create" data-crud-action="create">CREATE</button>
-    <button class="crud-btn read" data-crud-action="read">READ</button>
-    <button class="crud-btn update" data-crud-action="update">UPDATE</button>
-    <button class="crud-btn delete" data-crud-action="delete">DELETE</button>
   </div>
 
 </div>
@@ -160,11 +160,14 @@
 <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
 
 <script src="js/ByteStream.js"></script>
+<script src="js/VetorBytesEntidade.js"></script>
 <script src="js/Entidade.js"></script>
 <script src="js/EntidadeStorage.js"></script>
-<script src="js/VetorBytesEntidade.js"></script>
+<script src="js/ArquivoStorage.js"></script>
 <script src="./js/read.js"></script>
 <script src="js/create.js"></script>
+<script src="js/delete.js"></script>
+<script src="js/update.js"></script>
 <script src="js/script.js"></script>
 </body>
 </html>
