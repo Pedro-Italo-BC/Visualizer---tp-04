@@ -30,7 +30,13 @@ Pedro Ítalo B. Cardoso
 
 ### Visão Geral
 
+Este trabalho teve como objetivo desenvolver uma aplicação web interativa para visualização das operações de CRUD (Create, Read, Update e Delete) e da organização dos dados em arquivos. O sistema foi construído utilizando HTML, CSS e JavaScript, permitindo que os usuários compreendam de forma prática como os registros são armazenados, recuperados, alterados e removidos.
 
+A aplicação apresenta uma interface gráfica que representa visualmente as entidades, seus atributos e os registros armazenados, possibilitando acompanhar em tempo real os efeitos das operações realizadas. Dessa forma, conceitos normalmente abstratos relacionados a estruturas de dados e persistência em arquivos tornam-se mais acessíveis e intuitivos.
+
+Além das funcionalidades de cadastro, consulta, alteração e exclusão de registros, o sistema oferece recursos de visualização que permitem observar a disposição dos dados nos arquivos, facilitando o entendimento dos mecanismos utilizados internamente pelo sistema.
+
+Para validar a qualidade da solução desenvolvida, foi realizada uma avaliação com usuários, composta por um roteiro de testes e um questionário baseado na escala Likert. Os resultados obtidos indicaram elevado nível de satisfação, utilidade e usabilidade, com média geral de 4,86 em uma escala de 1 a 5. Toda a documentação encontra-se na pasta docs do projeto.
 
 ### Telas do Sistema (Prints)
 
