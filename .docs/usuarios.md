@@ -47,6 +47,6 @@
 | 7 | Estou satisfeito(a) com a experiência geral de uso da aplicação. | **4,70** |
 | | **Média Geral** | **4,86** |
 
-### Conclusão
+## Conclusão
 
 A aplicação obteve média geral de 4,86/5,0, indicando elevada satisfação dos participantes. Os usuários destacaram principalmente a facilidade de uso da interface e a contribuição da ferramenta para a compreensão do armazenamento de registros em arquivos.
