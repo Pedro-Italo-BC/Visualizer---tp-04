@@ -74,7 +74,7 @@ As entidades e seus registros permanecem armazenados utilizando o Local Storage 
 
 ### Telas do Sistema (Prints)
 
-### Criar Entidade
+### Página de Tutorial
 <img src="img/tutorial.png" width="700">
 
 ### Criar Entidade
