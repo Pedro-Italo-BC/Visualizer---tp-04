@@ -108,25 +108,35 @@ const ArquivoStorage = (() => {
             normalizados.map((campo) => campo.valor)
         );
         const bytesId = ByteStream.writeInt(Number(id) || 0);
-        return [...PREFIXO_REGISTRO, ...bytesId, ...bytesValores];
+        return [...bytesId, ...bytesValores];
     }
 
     function extrairIdDoPayload(bytes) {
         const vetor = (bytes || []).map(normalizarByte);
-        if (vetor.length >= PREFIXO_REGISTRO.length + TAM_ID_REGISTRO
-            && vetor[0] === PREFIXO_REGISTRO[0]
-            && vetor[1] === PREFIXO_REGISTRO[1]) {
-            return Number(ByteStream.readInt(new Int8Array(vetor.slice(2, 2 + TAM_ID_REGISTRO)), 0));
+        if (vetor.length >= TAM_ID_REGISTRO) {
+            // Novo formato: ID nos primeiros 4 bytes
+            if (vetor[0] !== PREFIXO_REGISTRO[0] || vetor[1] !== PREFIXO_REGISTRO[1]) {
+                return Number(ByteStream.readInt(new Int8Array(vetor.slice(0, TAM_ID_REGISTRO)), 0));
+            }
+            // Legacy com prefixo: pular 2 bytes e ler ID
+            if (vetor.length >= PREFIXO_REGISTRO.length + TAM_ID_REGISTRO) {
+                return Number(ByteStream.readInt(new Int8Array(vetor.slice(2, 2 + TAM_ID_REGISTRO)), 0));
+            }
         }
         return null;
     }
 
     function removerPrefixoRegistro(bytes) {
         const vetor = (bytes || []).map(normalizarByte);
+        // Se começa com prefixo (legacy), remover prefixo + ID
         if (vetor.length >= PREFIXO_REGISTRO.length + TAM_ID_REGISTRO
             && vetor[0] === PREFIXO_REGISTRO[0]
             && vetor[1] === PREFIXO_REGISTRO[1]) {
-            return vetor.slice(2 + TAM_ID_REGISTRO);
+            return vetor.slice(PREFIXO_REGISTRO.length + TAM_ID_REGISTRO);
+        }
+        // Novo formato: remover apenas os 4 bytes do ID
+        if (vetor.length >= TAM_ID_REGISTRO) {
+            return vetor.slice(TAM_ID_REGISTRO);
         }
         return vetor;
     }
@@ -267,11 +277,13 @@ const ArquivoStorage = (() => {
     function escreverRegistroReaproveitado(arquivo, endereco, bytes) {
         const tamanhoAnterior = lerShort(arquivo, endereco + TAM_LAPIDE);
         arquivo[endereco] = LAPIDE_ATIVO;
-        escreverTamanhoRegistro(arquivo, endereco + TAM_LAPIDE, bytes.length);
+        // Manter o tamanho do slot (máximo entre anterior e novo) para evitar corrupção
+        const tamanhoSlot = Math.max(tamanhoAnterior, bytes.length);
+        escreverTamanhoRegistro(arquivo, endereco + TAM_LAPIDE, tamanhoSlot);
         escreverBytes(arquivo, endereco + TAM_LAPIDE + TAM_TAMANHO, bytes);
 
         const fimPayload = endereco + TAM_LAPIDE + TAM_TAMANHO + bytes.length;
-        const fimSlot = endereco + TAM_LAPIDE + TAM_TAMANHO + Math.max(tamanhoAnterior, bytes.length);
+        const fimSlot = endereco + TAM_LAPIDE + TAM_TAMANHO + tamanhoSlot;
         for (let i = fimPayload; i < fimSlot; i++) {
             arquivo[i] = 0;
         }
