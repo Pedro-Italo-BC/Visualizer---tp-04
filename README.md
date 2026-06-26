@@ -1,6 +1,6 @@
 # TRABALHO PRÁTICO 04 - ALGORITMOS E ESTRUTURAS DE DADOS 3
 
-**Pontifícia Universidade Católica**  
+**Pontifícia Universidade Católica de Minas Gerais**  
 **Ciência da Computação**
 
 Video de demonstração do projeto:     
@@ -73,6 +73,9 @@ A aplicação permite exportar o conteúdo gerado para um arquivo binário (.db)
 As entidades e seus registros permanecem armazenados utilizando o Local Storage do navegador, permitindo que os dados continuem disponíveis mesmo após o fechamento da aplicação.
 
 ### Telas do Sistema (Prints)
+
+### Criar Entidade
+<img src="img/tutorial.png" width="700">
 
 ### Criar Entidade
 <img src="img/entidades2.png" width="700">
