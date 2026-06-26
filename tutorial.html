@@ -66,13 +66,36 @@
         <img src="img/home.png" alt="Tela inicial">
     </section>
 
+    <div class="tutorial-creators">
+    <h2>CRIADORES</h2>
+
+    <div class="criadores">
+        <div class="criador" data-name="Ane Madjarian">
+            <img src="img/ane.jpeg">
+        </div>
+
+        <div class="criador" data-name="Camila Menezes">
+            <img src="img/camila.jpeg">
+        </div>
+
+        <div class="criador" data-name="Daniel Pereira">
+            <img src="img/daniel.png">
+        </div>
+
+        <div class="criador" data-name="Pedro Italo Cardoso">
+            <img src="img/pedro.png">
+        </div>
+    </div>
+</div>
+
     <section class="tutorial-card">
         <div class="tutorial-content">
             <h2>O que é o Visualizer?</h2>
 
             <p>
                 O sistema foi desenvolvido para demonstrar de forma visual o
-                funcionamento de arquivos de dados utilizados em bancos de dados.
+                funcionamento de arquivos de dados utilizados em bancos de dados, na disciplina 
+                de Algoritmos e Estruturas de Dados 3, com o professor Marcos André Silveira Kutova.
             </p>
 
             <p>
@@ -83,43 +106,31 @@
         </div>
     </section>
 
+
     <section class="tutorial-card reverse">
-        <img src="img/entidades.png" alt="Entidades">
+    <img src="img/entidades.png" alt="Entidades">
 
-        <div class="tutorial-content">
-            <h2>Tela de Entidades</h2>
+    <div class="tutorial-content">
+        <h2>Tela de Entidades</h2>
 
-            <p>
-                Nesta tela são definidas as entidades e seus atributos.
-            </p>
+        <p>
+            Nesta tela são definidas as entidades e seus atributos. Aqui, você pode:
+        </p>
 
-            <ul>
-                <li>Criar entidades</li>
-                <li>Adicionar atributos</li>
-                <li>Definir tipos de dados</li>
-                <li>Gerenciar estruturas de armazenamento</li>
-            </ul>
+        <ul>
+            <li>Criar entidades</li>
+            <li>Adicionar atributos</li>
+            <li>Definir tipos de dados</li>
+            <li>Gerenciar estruturas de armazenamento</li>
+        </ul>
+
+        <div class="crud-actions">
+            <a href="entidades.html" class="crud-btn create">
+                ACESSAR ENTIDADES
+            </a>
         </div>
-    </section>
-
-    <section class="tutorial-card">
-        <div class="tutorial-content">
-            <h2>Tela de Dados</h2>
-
-            <p>
-                Exibe os bytes armazenados no arquivo da entidade.
-            </p>
-
-            <ul>
-                <li>Visualização hexadecimal</li>
-                <li>Decodificação dos registros</li>
-                <li>Monitoramento das operações CRUD</li>
-                <li>Análise da estrutura física do arquivo</li>
-            </ul>
-        </div>
-
-        <img src="img/tutorial/dados.png" alt="Dados">
-    </section>
+    </div>
+</section>
 
     <section class="tutorial-card reverse">
         <img src="img/create.png" alt="Create">
@@ -138,6 +149,10 @@
                 <li>O registro é armazenado no arquivo.</li>
                 <li>O visualizador é atualizado.</li>
             </ol>
+
+            <p>
+                Você pode acessar o CREATE através do botão no canto direito inferior da tela de início!
+            </p>
         </div>
     </section>
 
@@ -146,37 +161,51 @@
             <h2>READ</h2>
 
             <p>
-                Permite localizar e visualizar registros já armazenados.
+                Ao selecionar uma entidade criada e clicar em "Registros", é possível ver todos os registros feitos daquela entidade. 
+                Clicando em algum deles, também é possível visualizar seus bytes destacados e algumas informações sobre, como o caractere ASCII, seu ID e sua lápide
             </p>
         </div>
 
-        <img src="img/tutorial/read.png" alt="Read">
+        <img src="img/read.png" alt="Read">
+        <img src="img/lapide.png" alt="Read">
     </section>
 
     <section class="tutorial-card reverse">
-        <img src="img/tutorial/update.png" alt="Update">
+        <img src="img/update.png" alt="Update">
 
         <div class="tutorial-content">
-            <h2>UPDATE</h2>
+            <h2>UPDATE & DELETE</h2>
+
+            <p>Tanto o update quanto o delete podem ser feitos na página inicial, selecionando
+                uma entidade e clicando em "Registros"
+            </p>
 
             <p>
-                Atualiza registros existentes, preservando a estrutura do
-                arquivo conforme as regras definidas.
+                O UPDATE atualiza registros existentes, preservando a estrutura do
+                arquivo conforme as regras definidas. Já o DELETE, remove logicamente um registro através da utilização da lápide,
+                permitindo reutilização futura do espaço.
+
             </p>
         </div>
+
+        <img src="img/delete.png" alt="Update">
     </section>
 
-    <section class="tutorial-card">
-        <div class="tutorial-content">
-            <h2>DELETE</h2>
+    <section class="tutorial-card reverse">
 
-            <p>
-                Remove logicamente um registro através da utilização da lápide,
-                permitindo reutilização futura do espaço.
+        <div class="tutorial-content">
+            <h2>DÚVIDAS?</h2>
+
+            <p>Caso tenha restado alguma dúvida, entre em contato com os criadores através do LinkedIn ou acesse o vídeo abaixo
+                para entender melhor como utilizar a ferramenta!
             </p>
         </div>
 
-        <img src="img/tutorial/delete.png" alt="Delete">
+        <div class="crud-actions">
+            <a href="" class="crud-btn create">
+                ACESSAR VÍDEO
+            </a>
+        </div>
     </section>
 
 </main>

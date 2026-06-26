@@ -348,11 +348,102 @@ hr.divider {
   nav { gap: 16px; }
 }
 
+.tutorial-content {
+    text-align: left; /* tira centralização */
+}
+
+.criadores {
+    display: flex;
+    gap: 35px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    justify-content: flex-start; /* joga tudo pra esquerda */
+}
+
+/* avatar mais “bolão” mesmo */
+.criador img {
+    width: 170px;
+    height: 170px;
+    object-fit: cover;
+
+    border-radius: 50%; /* super redondo */
+    
+    border: 8px solid; /* borda mais grossa = mais visível */
+    
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    /* dá mais destaque visual */
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+/* hover mais forte */
+.criador img:hover {
+    transform: scale(1.08);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* cores bem marcadas */
+.criador:nth-child(1) img {
+    border-color: #ff2d55; /* rosa forte */
+}
+
+.criador:nth-child(2) img {
+    border-color: #1e90ff; /* azul forte */
+}
+
+.criador:nth-child(3) img {
+    border-color: #2ecc71; /* verde forte */
+}
+
+.criador:nth-child(4) img {
+    border-color: #f1c40f; /* amarelo forte */
+}
+
+.tutorial-creators {
+    text-align: center;
+}
+
+.criadores {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+/* bolinhas */
+.criador img {
+    width: 130px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 5px solid transparent;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+/* nome embaixo */
+.criador::after {
+    content: attr(data-name);
+    display: block;
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+/* cores */
+.criador:nth-child(1) img { border-color: #ff4d6d; }
+.criador:nth-child(2) img { border-color: #930b9c; }
+.criador:nth-child(3) img { border-color: #51cfb6; }
+.criador:nth-child(4) img { border-color: #ee7912; }
+
 input,
 select,
 button,
 textarea {
   font-family: var(--mono);
+}
+
+.crud-btn {
+    text-decoration: none;
 }
 
 .default-btn {
