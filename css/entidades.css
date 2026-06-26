@@ -250,6 +250,8 @@ main {
   font-size: 13px;
   letter-spacing: 1px;
   line-height: 22px;
+  max-height: 400px;
+
 }
 
 /* ---------- Footer / actions ---------- */
@@ -809,7 +811,6 @@ li.entity-card .entity-actions .entity-remove {
 .info-section {
     border: 1px solid var(--border);
     border-radius: 8px;
-    overflow: hidden;
     background: #fff;
 }
 

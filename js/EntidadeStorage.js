@@ -91,8 +91,14 @@ const EntidadeStorage = (() => {
     function salvar(entidade) {
         const banco = carregarBanco();
         const atualizada = entidade instanceof Entidade ? entidade : Entidade.deObjeto(entidade);
-        atualizada.sincronizarVetorBytes();
-        salvarArquivo(atualizada);
+        const arquivoAtual = carregarArquivo(atualizada);
+
+        atualizada.atualizadoEm = new Date().toISOString();
+        atualizada.vetorBytes = arquivoAtual || atualizada.vetorBytes || VetorBytesEntidade.criarVetorInicial();
+
+        if (!arquivoAtual) {
+            salvarArquivo(atualizada);
+        }
 
         const indice = banco.entidades.findIndex((item) => item.id === atualizada.id);
         if (indice >= 0) {

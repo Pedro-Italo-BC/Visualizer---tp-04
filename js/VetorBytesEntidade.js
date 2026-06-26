@@ -31,7 +31,10 @@ const VetorBytesEntidade = (() => {
     }
 
     function criarVetorInicial() {
-        return [0, 0, 0, 0];
+        return [
+            ...ByteStreamAPI.writeInt(0),
+            ...ByteStreamAPI.writeLong(-1)
+        ].map((byte) => ((byte % 256) + 256) % 256);
     }
 
     function obterRegistros(entidade) {
@@ -45,11 +48,11 @@ const VetorBytesEntidade = (() => {
         const ativos = registros.filter((registro) => registro.ativo).length;
         const inativos = registros.length - ativos;
         const quantidadeAncoras = registros.length;
-        const primeiraAncora = registros.length > 0 ? TAMANHO_CONTADOR : -1;
+        const primeiraAncora = registros.length > 0 ? TAMANHO_CONTADOR + TAMANHO_ANCORA : -1;
         const ultimaAncora = registros.length > 0
-            ? TAMANHO_CONTADOR + ((registros.length - 1) * (TAMANHO_ANCORA + tamanhoRegistro))
+            ? TAMANHO_CONTADOR + TAMANHO_ANCORA + ((registros.length - 1) * (TAMANHO_ANCORA + tamanhoRegistro))
             : -1;
-        const tamanhoEsperado = TAMANHO_CONTADOR + registros.length * (TAMANHO_ANCORA + tamanhoRegistro);
+        const tamanhoEsperado = TAMANHO_CONTADOR + TAMANHO_ANCORA + registros.length * (TAMANHO_ANCORA + tamanhoRegistro);
         const tamanhoVetor = Array.isArray(entidade.vetorBytes) ? entidade.vetorBytes.length : tamanhoEsperado;
         const desperdicioMemoria = inativos * (TAMANHO_ANCORA + tamanhoRegistro);
 
