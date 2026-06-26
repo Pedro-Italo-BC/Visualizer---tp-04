@@ -34,7 +34,7 @@
 | Rafael Henrique Silva | 5 | 5 | 5 | 4 | 5 | 5 | 5 | **4,86** |
 | Yuri Penido | 5 | 5 | 5 | 5 | 5 | 4 | 4 | **4,71** |
 
-#### Médias por Questão
+### Médias por Questão
 
 | Item | Afirmação | Média |
 |---|---|:---:|
@@ -46,3 +46,7 @@
 | 6 | A aplicação me ajudou a compreender como os registros são armazenados em arquivos. | **4,80** |
 | 7 | Estou satisfeito(a) com a experiência geral de uso da aplicação. | **4,70** |
 | | **Média Geral** | **4,86** |
+
+### Conclusão
+
+A aplicação obteve média geral de 4,86/5,0, indicando elevada satisfação dos participantes. Os usuários destacaram principalmente a facilidade de uso da interface e a contribuição da ferramenta para a compreensão do armazenamento de registros em arquivos.
