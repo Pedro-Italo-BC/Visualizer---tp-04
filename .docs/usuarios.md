@@ -3,7 +3,7 @@
 ## Roteiro de Teste
 
 1. Cadastre uma entidade chamada Produto, contendo os campos:
-- Código: 001
+- Código: 1
 - Nome: Notebook
 - Preço: 3500
 2. Verifique se a entidade aparece na visualização dos arquivos.
@@ -11,8 +11,8 @@
 4. Atualize o preço do produto para R$ 4000.
 5. Verifique se a alteração foi refletida na visualização dos dados.
 6. Cadastre mais dois produtos:
-- Código: 002, Nome: Mouse, Preço: 80
-- Código: 003, Nome: Teclado, Preço: 150
+- Código: 2, Nome: Mouse, Preço: 80
+- Código: 3, Nome: Teclado, Preço: 150
 7. Exclua o produto de código 002.
 8. Verifique como o sistema representa o registro excluído.
 9. Navegue pelas diferentes áreas da aplicação e explore as visualizações disponíveis.
