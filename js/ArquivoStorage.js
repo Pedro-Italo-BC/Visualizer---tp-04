@@ -5,6 +5,8 @@ const ArquivoStorage = (() => {
     const OFFSET_LISTA_EXCLUIDOS = 4;
     const LAPIDE_ATIVO = " ".charCodeAt(0);
     const LAPIDE_EXCLUIDO = "*".charCodeAt(0);
+    const TAM_ID_REGISTRO = 4;
+    const PREFIXO_REGISTRO = [0x52, 0x01];
 
     function normalizarByte(valor) {
         const numero = Number(valor);
@@ -96,15 +98,37 @@ const ArquivoStorage = (() => {
         return objeto;
     }
 
-    function valoresParaBytes(valores) {
+    function construirBytesRegistro(id, valores) {
         const normalizados = normalizarValores(valores);
-        return ConversorDinamico.toByteArray(
+        const bytesValores = ConversorDinamico.toByteArray(
             normalizados.map((campo) => ({
                 nome: campo.nome,
                 tipo: campo.tipo
             })),
             normalizados.map((campo) => campo.valor)
         );
+        const bytesId = ByteStream.writeInt(Number(id) || 0);
+        return [...PREFIXO_REGISTRO, ...bytesId, ...bytesValores];
+    }
+
+    function extrairIdDoPayload(bytes) {
+        const vetor = (bytes || []).map(normalizarByte);
+        if (vetor.length >= PREFIXO_REGISTRO.length + TAM_ID_REGISTRO
+            && vetor[0] === PREFIXO_REGISTRO[0]
+            && vetor[1] === PREFIXO_REGISTRO[1]) {
+            return Number(ByteStream.readInt(new Int8Array(vetor.slice(2, 2 + TAM_ID_REGISTRO)), 0));
+        }
+        return null;
+    }
+
+    function removerPrefixoRegistro(bytes) {
+        const vetor = (bytes || []).map(normalizarByte);
+        if (vetor.length >= PREFIXO_REGISTRO.length + TAM_ID_REGISTRO
+            && vetor[0] === PREFIXO_REGISTRO[0]
+            && vetor[1] === PREFIXO_REGISTRO[1]) {
+            return vetor.slice(2 + TAM_ID_REGISTRO);
+        }
+        return vetor;
     }
 
     const TAMANHOS_TIPO_VETOR_ANTIGO = {
@@ -137,14 +161,34 @@ const ArquivoStorage = (() => {
 
     function valoresObjetoPorBytes(entidade, bytes) {
         const atributos = atributosDaEntidade(entidade);
-        const valores = ConversorDinamico.fromByteArray(atributos, new Int8Array(bytes.map(normalizarByte)));
+        const payload = removerPrefixoRegistro(bytes);
+        const valores = ConversorDinamico.fromByteArray(atributos, new Int8Array(payload.map(normalizarByte)));
         const objeto = {};
 
         atributos.forEach((atributo, index) => {
             objeto[atributo.nome] = valores[index];
         });
 
-        return objeto;
+        return {
+            id: extrairIdDoPayload(bytes),
+            valores: objeto
+        };
+    }
+
+    function decodificarRegistro(entidade, payload, slot) {
+        if (!Array.isArray(payload) || payload.length === 0) {
+            return { id: null, valores: {} };
+        }
+
+        if (slot && slot.lapide === LAPIDE_EXCLUIDO) {
+            return { id: null, valores: {} };
+        }
+
+        try {
+            return valoresObjetoPorBytes(entidade, payload);
+        } catch (erro) {
+            return { id: null, valores: {} };
+        }
     }
 
     function getDeleted(arquivo, tamanhoNecessario) {
@@ -215,8 +259,23 @@ const ArquivoStorage = (() => {
     }
 
     function escreverRegistroReaproveitado(arquivo, endereco, bytes) {
+        const tamanhoOriginal = lerShort(arquivo, endereco + TAM_LAPIDE);
         arquivo[endereco] = LAPIDE_ATIVO;
-        escreverBytes(arquivo, endereco + TAM_LAPIDE + TAM_TAMANHO, bytes);
+
+        // Se o novo payload couber no espaço existente, mantenha o tamanho
+        // original do slot para evitar deslocar os registros seguintes.
+        if (bytes.length <= tamanhoOriginal) {
+            escreverBytes(arquivo, endereco + TAM_LAPIDE + TAM_TAMANHO, bytes);
+            const inicioPad = endereco + TAM_LAPIDE + TAM_TAMANHO + bytes.length;
+            const fimPad = endereco + TAM_LAPIDE + TAM_TAMANHO + tamanhoOriginal;
+            for (let i = inicioPad; i < fimPad; i++) {
+                arquivo[i] = 0;
+            }
+        } else {
+            // Precisa de mais espaço: atualiza o campo tamanho e escreve.
+            escreverShort(arquivo, endereco + TAM_LAPIDE, bytes.length);
+            escreverBytes(arquivo, endereco + TAM_LAPIDE + TAM_TAMANHO, bytes);
+        }
     }
 
     function obterRegistroAtivo(entidade, id) {
@@ -264,27 +323,54 @@ const ArquivoStorage = (() => {
         });
     }
 
-    function buscarMetadadoPorEndereco(entidade, endereco) {
-        return (entidade.registros || []).find((registro) => Number(registro.endereco) === Number(endereco)) || null;
+    function sincronizarMetadadoRegistro(entidade, registro) {
+        const metadado = (entidade.registros || []).find((item) => Number(item.id) === Number(registro.id));
+        if (!metadado) {
+            entidade.registros = Array.isArray(entidade.registros) ? entidade.registros : [];
+            entidade.registros.push({ ...registro });
+            return entidade.registros[entidade.registros.length - 1];
+        }
+
+        Object.assign(metadado, {
+            ...registro,
+            criadoEm: metadado.criadoEm || registro.criadoEm,
+            atualizadoEm: registro.atualizadoEm || metadado.atualizadoEm
+        });
+        return metadado;
+    }
+
+    function buscarRegistroNoArquivo(entidade, arquivo, id) {
+        const registros = listarRegistrosDoArquivo(entidade, arquivo);
+        return registros.find((registro) => {
+            if (!registro || !registro.ativo) return false;
+            if (registro.id === id) return true;
+            return Number.isFinite(Number(registro.id)) && Number.isFinite(Number(id))
+                ? Number(registro.id) === Number(id)
+                : false;
+        }) || null;
     }
 
     function montarRegistroDoArquivo(entidade, arquivo, slot, index) {
         const metadado = buscarMetadadoPorEndereco(entidade, slot.endereco);
         const payload = payloadRegistro(arquivo, slot.endereco) || [];
-        let valores = {};
+        let dados = { id: null, valores: {} };
         let erroDecodificacao = "";
 
         try {
-            valores = valoresObjetoPorBytes(entidade, payload);
+            dados = decodificarRegistro(entidade, payload, slot);
+            if (!dados || typeof dados !== "object") {
+                dados = { id: null, valores: {} };
+            }
         } catch (erro) {
             erroDecodificacao = erro.message || "Nao foi possivel decodificar o registro.";
         }
 
-        return {
-            id: metadado ? metadado.id : index + 1,
+        const id = dados.id ?? (metadado ? metadado.id : index + 1);
+        const registro = {
+            id,
             endereco: slot.endereco,
             ativo: slot.lapide !== LAPIDE_EXCLUIDO,
-            valores,
+            valores: dados.valores || {},
             tamanho: slot.tamanho,
             lapide: slot.lapide,
             origem: "vetorBytes",
@@ -292,6 +378,12 @@ const ArquivoStorage = (() => {
             criadoEm: metadado ? metadado.criadoEm : null,
             atualizadoEm: metadado ? metadado.atualizadoEm : null
         };
+
+        if (metadado) {
+            sincronizarMetadadoRegistro(entidade, registro);
+        }
+
+        return registro;
     }
 
     function listarRegistrosDoArquivo(entidade, arquivo) {
@@ -408,31 +500,35 @@ const ArquivoStorage = (() => {
     function create(entidadeId, valores) {
         const entidade = obterEntidade(entidadeId);
         const arquivo = carregarArquivo(entidadeId);
-        const id = lerInt(arquivo, 0) + 1;
-        const bytes = valoresParaBytes(valores);
+        const proximoId = lerInt(arquivo, 0) + 1;
+        const bytes = construirBytesRegistro(proximoId, valores);
         const enderecoLivre = getDeleted(arquivo, bytes.length);
         const endereco = enderecoLivre === -1
             ? escreverRegistroNoFim(arquivo, bytes)
             : enderecoLivre;
 
-        escreverInt(arquivo, 0, id);
+        escreverInt(arquivo, 0, proximoId);
 
         if (enderecoLivre !== -1) {
             escreverRegistroReaproveitado(arquivo, endereco, bytes);
         }
 
-        entidade.registros.push({
-            id,
+        const registro = {
+            id: proximoId,
             endereco,
             ativo: true,
             valores: valoresParaObjeto(valores),
+            tamanho: bytes.length,
+            lapide: LAPIDE_ATIVO,
+            origem: "vetorBytes",
             criadoEm: new Date().toISOString(),
             atualizadoEm: new Date().toISOString()
-        });
+        };
 
-        EntidadeStorage.salvar(entidade);
+        sincronizarMetadadoRegistro(entidade, registro);
         salvarArquivo(entidade, arquivo);
-        return id;
+        EntidadeStorage.salvar(entidade);
+        return proximoId;
     }
 
     function read(entidadeId, id) {
@@ -464,7 +560,7 @@ const ArquivoStorage = (() => {
         const entidade = obterEntidade(entidadeId);
         const arquivo = carregarArquivo(entidadeId);
         sincronizarEnderecosAusentes(entidade, arquivo);
-        const registro = obterRegistroAtivo(entidade, id);
+        const registro = buscarRegistroNoArquivo(entidade, arquivo, id);
 
         if (!registro || !Number.isFinite(Number(registro.endereco))) return false;
 
@@ -477,9 +573,10 @@ const ArquivoStorage = (() => {
 
         registro.ativo = false;
         registro.atualizadoEm = new Date().toISOString();
+        sincronizarMetadadoRegistro(entidade, registro);
 
-        EntidadeStorage.salvar(entidade);
         salvarArquivo(entidade, arquivo);
+        EntidadeStorage.salvar(entidade);
         return true;
     }
 
@@ -487,7 +584,7 @@ const ArquivoStorage = (() => {
         const entidade = obterEntidade(entidadeId);
         const arquivo = carregarArquivo(entidadeId);
         sincronizarEnderecosAusentes(entidade, arquivo);
-        const registro = obterRegistroAtivo(entidade, id);
+        const registro = buscarRegistroNoArquivo(entidade, arquivo, id);
 
         if (!registro || !Number.isFinite(Number(registro.endereco))) return false;
 
@@ -495,7 +592,7 @@ const ArquivoStorage = (() => {
         if (arquivo[enderecoAtual] !== LAPIDE_ATIVO) return false;
 
         const tamanhoAtual = lerShort(arquivo, enderecoAtual + TAM_LAPIDE);
-        const novosBytes = valoresParaBytes(valores);
+        const novosBytes = construirBytesRegistro(registro.id, valores);
 
         if (novosBytes.length <= tamanhoAtual) {
             escreverBytes(arquivo, enderecoAtual + TAM_LAPIDE + TAM_TAMANHO, novosBytes);
@@ -517,9 +614,10 @@ const ArquivoStorage = (() => {
 
         registro.valores = valoresParaObjeto(valores);
         registro.atualizadoEm = new Date().toISOString();
+        sincronizarMetadadoRegistro(entidade, registro);
 
-        EntidadeStorage.salvar(entidade);
         salvarArquivo(entidade, arquivo);
+        EntidadeStorage.salvar(entidade);
         return true;
     }
 
