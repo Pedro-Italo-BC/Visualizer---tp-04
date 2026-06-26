@@ -417,6 +417,13 @@ textarea {
   font-weight: 700;
 }
 
+.decoder-entity-size {
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 11px;
+  font-weight: 500;
+}
+
 .decoder-entity-attributes {
   margin: 0;
   color: #3f3f3f;

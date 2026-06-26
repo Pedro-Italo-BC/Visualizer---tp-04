@@ -242,11 +242,7 @@
             criarCardInfo("Ativos", metricas.quantidadeAtivos),
             criarCardInfo("Inativos", metricas.quantidadeInativos),
             criarCardInfo("Ancoras", metricas.quantidadeAncoras),
-            criarCardInfo("Primeira ancora", formatarEndereco(metricas.primeiraAncora)),
-            criarCardInfo("Ultima ancora", formatarEndereco(metricas.ultimaAncora)),
-            criarCardInfo("Tamanho do registro", formatarBytes(metricas.tamanhoRegistro)),
             criarCardInfo("Tamanho do arquivo", formatarBytes(arquivo.length), "vetor salvo no localStorage"),
-            criarCardInfo("Desperdicio", formatarBytes(metricas.desperdicioMemoria))
         );
 
         entidade.atributos.forEach((atributo) => {
@@ -254,7 +250,7 @@
             item.append(
                 criarElemento("span", [], atributo.nome),
                 criarElemento("strong", [], atributo.tipo),
-                criarElemento("small", [], `${VetorBytesEntidade.normalizarAtributos([atributo])[0].tamanho} bytes`)
+                criarElemento("small", [], atributo.tipo.toLowerCase() === "string" ? "Dinâmico" : `${VetorBytesEntidade.normalizarAtributos([atributo])[0].tamanho} bytes`)
             );
             elementos.atributosInfo.appendChild(item);
         });

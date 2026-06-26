@@ -869,11 +869,27 @@ function renderizarEntidadesDecoder() {
     if (entidade.id === estadoCrud.entidadeSelecionadaId) item.classList.add("is-selected");
     item.dataset.id = entidade.id;
 
-    const titulo = criarElemento("h3", [], entidade.nome);
-    const meta = criarElemento("div", ["decoder-entity-meta"], `${entidade.atributos.length} atributos | ${entidade.registros.length} registros`);
+    const titulo = criarElemento("h3", [], `${entidade.nome}`);
+    
+    // Contar registros ativos e inativos
+    const registrosAtivos = (entidade.registros || []).filter(r => r.ativo).length;
+    const registrosInativos = (entidade.registros || []).filter(r => !r.ativo).length;
+    const totalRegistros = entidade.registros ? entidade.registros.length : 0;
+    
+    // Carregar tamanho do arquivo
+    const chaveArquivo = `visualizer.entidade.arquivo.${entidade.id}`;
+    const bytesArmazenados = localStorage.getItem(chaveArquivo);
+    const tamanhoArquivo = bytesArmazenados ? JSON.parse(bytesArmazenados).length : 0;
+    
+    const meta = criarElemento("div", ["decoder-entity-meta"], 
+      `${entidade.atributos.length} atributos | ${totalRegistros} registros (${registrosAtivos} ativos, ${registrosInativos} inativos)`);
+    
+    const tamanhoInfo = criarElemento("div", ["decoder-entity-size"], 
+      `Arquivo: ${tamanhoArquivo} bytes`);
+    
     const atributos = criarElemento("p", ["decoder-entity-attributes"], formatarResumoAtributos(entidade));
 
-    item.append(titulo, meta, atributos);
+    item.append(titulo, meta, tamanhoInfo, atributos);
     lista.appendChild(item);
   });
 
