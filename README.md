@@ -3,8 +3,9 @@
 **Pontifícia Universidade Católica de Minas Gerais**  
 **Ciência da Computação**
 
-Video de demonstração do projeto:     
-Link para teste com os usuários e relatório: https://github.com/Pedro-Italo-BC/Visualizer---tp-04/blob/main/.docs/usuarios.md
+Video de demonstração do projeto: https://youtu.be/H4dJ9PLVKIE?si=z_tTTsRT1x0GnhHc    
+Link para teste com os usuários e relatório: https://github.com/Pedro-Italo-BC/Visualizer---tp-04/blob/main/.docs/usuarios.md   
+Link do site hospedado: https://pedro-italo-bc.github.io/Visualizer---tp-04/
 
 **Autores:**  
 Ane M. Viana  
