@@ -1302,4 +1302,34 @@ document.addEventListener("keydown", (evento) => {
   }
 });
 
+document.querySelector(".download-btn").addEventListener("click", () => {
+  const entidade = obterEntidadeSelecionada();
+  if (!entidade) {
+    mostrarToast("Selecione uma entidade para exportar.", "danger");
+    return;
+  }
+
+  const bytes = estadoCrud.bytesAtuais;
+  if (!Array.isArray(bytes) || bytes.length === 0) {
+    mostrarToast("Nenhum dado para exportar.", "danger");
+    return;
+  }
+
+  // Criar um Blob com os bytes
+  const uint8Array = new Uint8Array(bytes.map(normalizarByte));
+  const blob = new Blob([uint8Array], { type: "application/octet-stream" });
+
+  // Criar link de download
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${entidade.nome}.db`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  mostrarToast(`Arquivo ${entidade.nome}.db exportado com sucesso.`, "success");
+});
+
 window.addEventListener("resize", sincronizarOffsetsHex);
