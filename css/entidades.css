@@ -250,6 +250,8 @@ main {
   font-size: 13px;
   letter-spacing: 1px;
   line-height: 22px;
+  max-height: 400px;
+
 }
 
 /* ---------- Footer / actions ---------- */

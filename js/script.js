@@ -18,7 +18,12 @@ const estadoCrud = {
     selected: null
   },
   registrosFormulario: [],
-  bytesAtuais: []
+  bytesAtuais: [],
+  menuArquivo: {
+    byteIndex: null,
+    range: null,
+    elemento: null
+  }
 };
 
 const hexHeader = document.getElementById("hex-header");
@@ -59,13 +64,25 @@ function lerLongArquivo(vetor, offset) {
 }
 
 function obterRegistroPorEndereco(entidade, endereco) {
-  if (!entidade || !Array.isArray(entidade.registros)) return null;
-  return entidade.registros.find((registro) => Number(registro.endereco) === Number(endereco)) || null;
+  if (!entidade) return null;
+
+  try {
+    return (ReadArquivo.read(entidade.id) || []).find((registro) => Number(registro.endereco) === Number(endereco)) || null;
+  } catch (erro) {
+    console.warn("Nao foi possivel ler registro do vetor de bytes.", erro);
+    return null;
+  }
 }
 
 function obterRegistroPorId(entidade, id) {
-  if (!entidade || !Array.isArray(entidade.registros)) return null;
-  return entidade.registros.find((registro) => Number(registro.id) === Number(id)) || null;
+  if (!entidade) return null;
+
+  try {
+    return ReadArquivo.read(entidade.id, id);
+  } catch (erro) {
+    console.warn("Nao foi possivel ler registro do vetor de bytes.", erro);
+    return null;
+  }
 }
 
 function analisarArquivoAtual() {
@@ -113,7 +130,14 @@ function criarRangeCabecalho(tipo) {
       inicio: 0,
       fim: 3,
       titulo: "Ultimo ID",
-      detalhe: `Ultimo ID usado: ${analise.ultimoId}`
+      detalhe: `Ultimo ID usado: ${analise.ultimoId}`,
+      metadados: {
+        tipo: "cabecalho",
+        campo: "ultimo ID",
+        offset: "0x00000000",
+        tamanho: "4 bytes",
+        ultimoId: analise.ultimoId
+      }
     };
   }
 
@@ -125,19 +149,47 @@ function criarRangeCabecalho(tipo) {
     titulo: "Ponteiro de lapides",
     detalhe: analise.ponteiroLapides === -1
       ? "Lista de lapides vazia."
-      : `Primeira lapide no endereco 0x${analise.ponteiroLapides.toString(16).toUpperCase().padStart(8, "0")}.`
+      : `Primeira lapide no endereco 0x${analise.ponteiroLapides.toString(16).toUpperCase().padStart(8, "0")}.`,
+    metadados: {
+      tipo: "ponteiro de lapides",
+      offset: "0x00000004",
+      tamanho: "8 bytes",
+      ponteiro: analise.ponteiroLapides === -1
+        ? "-1"
+        : `0x${analise.ponteiroLapides.toString(16).toUpperCase().padStart(8, "0")}`,
+      registrosLapide: analise.deletados.length
+    }
   };
 }
 
 function criarRangeRegistro(slot) {
   const id = slot.id === null ? "sem metadado" : slot.id;
+  const valores = slot.registro && slot.registro.valores
+    ? Object.entries(slot.registro.valores).map(([chave, valor]) => `${chave}: ${valor}`).join(" | ")
+    : "-";
+
   return {
     tipo: slot.tipo,
     id: slot.id,
     inicio: slot.inicio,
     fim: slot.fim,
+    offset: slot.endereco,
+    tamanho: slot.tamanho,
+    ativo: slot.ativo,
+    lapide: slot.lapide,
     titulo: slot.tipo === "registro-deletado" ? "Registro deletado" : "Registro",
-    detalhe: `ID ${id} | endereco 0x${slot.endereco.toString(16).toUpperCase().padStart(8, "0")} | tamanho ${slot.tamanho} bytes`
+    detalhe: `ID ${id} | endereco 0x${slot.endereco.toString(16).toUpperCase().padStart(8, "0")} | tamanho ${slot.tamanho} bytes`,
+    metadados: {
+      tipo: slot.tipo === "registro-deletado" ? "registro deletado" : "registro",
+      id,
+      status: slot.ativo ? "ativo" : "inativo",
+      offset: `0x${slot.endereco.toString(16).toUpperCase().padStart(8, "0")}`,
+      tamanho: `${slot.tamanho} bytes`,
+      lapide: `${formatarAscii(slot.lapide)} (${toHex(slot.lapide)})`,
+      inicioBytes: slot.inicio,
+      fimBytes: slot.fim,
+      valores
+    }
   };
 }
 
@@ -153,7 +205,14 @@ function obterRangePorByte(index) {
       inicio: index,
       fim: index,
       titulo: "Byte",
-      detalhe: `Endereco 0x${index.toString(16).toUpperCase().padStart(8, "0")} | ASCII ${formatarAscii(estadoCrud.bytesAtuais[index])}`
+      detalhe: `Endereco 0x${index.toString(16).toUpperCase().padStart(8, "0")} | ASCII ${formatarAscii(estadoCrud.bytesAtuais[index])}`,
+      metadados: {
+        tipo: "byte",
+        offset: `0x${index.toString(16).toUpperCase().padStart(8, "0")}`,
+        decimal: normalizarByte(estadoCrud.bytesAtuais[index]),
+        hexadecimal: toHex(estadoCrud.bytesAtuais[index]),
+        ascii: formatarAscii(estadoCrud.bytesAtuais[index])
+      }
     };
   }
 
@@ -183,7 +242,13 @@ function obterRangePorRegistro(registroId) {
     inicio: Number(registro.endereco),
     fim: Number(registro.endereco),
     titulo: registro.ativo ? "Registro" : "Registro deletado",
-    detalhe: `ID ${registro.id}`
+    detalhe: `ID ${registro.id}`,
+    metadados: {
+      tipo: registro.ativo ? "registro" : "registro deletado",
+      id: registro.id,
+      offset: Number.isFinite(Number(registro.endereco)) ? `0x${Number(registro.endereco).toString(16).toUpperCase().padStart(8, "0")}` : "-",
+      status: registro.ativo ? "ativo" : "inativo"
+    }
   };
 }
 
@@ -220,23 +285,59 @@ function descreverRange(range) {
   return `${range.titulo}: ${range.detalhe}${ascii}${deletados}`;
 }
 
+function criarItemInfo(rotulo, valor) {
+  const item = document.createElement("div");
+  item.className = "selection-info-item";
+
+  const label = document.createElement("span");
+  label.textContent = rotulo;
+
+  const conteudo = document.createElement("strong");
+  conteudo.textContent = String(valor ?? "-");
+
+  item.append(label, conteudo);
+  return item;
+}
+
 function atualizarPainelSelecao(range) {
   if (!selectionInfo) return;
-  selectionInfo.textContent = descreverRange(range || estadoCrud.interacao.selected);
+  const ativo = range || estadoCrud.interacao.selected;
+  selectionInfo.innerHTML = "";
+
+  if (!ativo) {
+    selectionInfo.textContent = descreverRange(null);
+    return;
+  }
+
+  const titulo = document.createElement("div");
+  titulo.className = "selection-info-title";
+  titulo.textContent = descreverRange(ativo);
+  selectionInfo.appendChild(titulo);
+
+  const lista = document.createElement("div");
+  lista.className = "selection-info-grid";
+  Object.entries(ativo.metadados || {}).forEach(([chave, valor]) => {
+    lista.appendChild(criarItemInfo(chave, valor));
+  });
+
+  selectionInfo.appendChild(lista);
 }
 
 function limparClassesInteracao() {
-  document.querySelectorAll(".byte-hover, .byte-selected, .record-hover, .record-selected").forEach((elemento) => {
-    elemento.classList.remove("byte-hover", "byte-selected", "record-hover", "record-selected");
+  document.querySelectorAll(".byte-hover, .byte-selected, .record-hover, .record-selected, .record-row-hover, .record-row-selected").forEach((elemento) => {
+    elemento.classList.remove("byte-hover", "byte-selected", "record-hover", "record-selected", "record-row-hover", "record-row-selected");
   });
 }
 
 function marcarRange(range, classeByte, classeRegistro) {
   if (!range) return;
+  const classeLinha = classeByte === "byte-selected" ? "record-row-selected" : "record-row-hover";
 
   indicesDoRange(range).forEach((index) => {
     document.querySelectorAll(`[data-byte-index="${index}"]`).forEach((elemento) => {
       elemento.classList.add(classeByte);
+      const linha = elemento.closest(".hex-data-row");
+      if (linha) linha.classList.add(classeLinha);
     });
   });
 
@@ -262,6 +363,168 @@ function definirHover(range) {
 function definirSelecao(range) {
   estadoCrud.interacao.selected = range;
   aplicarInteracao();
+}
+
+function selecionarRegistroPorId(registroId) {
+  const range = obterRangePorRegistro(registroId);
+  if (range) definirSelecao(range);
+}
+
+function salvarBytesAtuaisNoArquivo() {
+  const entidade = obterEntidadeSelecionada();
+  const chave = criarChaveArquivo(entidade);
+  if (!entidade || !chave) return false;
+
+  localStorage.setItem(chave, JSON.stringify(estadoCrud.bytesAtuais.map(normalizarByte)));
+
+  try {
+    ReadArquivo.read(entidade.id);
+  } catch (erro) {
+    console.warn("Nao foi possivel sincronizar metadados apos editar byte.", erro);
+  }
+
+  estadoCrud.entidades = carregarEntidadesLocalStorage();
+  return true;
+}
+
+function esconderMenuArquivo() {
+  const menu = document.querySelector(".file-context-menu");
+  if (menu) menu.remove();
+  estadoCrud.menuArquivo = { byteIndex: null, range: null, elemento: null };
+}
+
+function reposicionarMenuArquivo(menu, elemento) {
+  const rect = elemento.getBoundingClientRect();
+  const menuRect = menu.getBoundingClientRect();
+  const margem = 8;
+  const left = Math.min(
+    window.innerWidth - menuRect.width - margem,
+    Math.max(margem, rect.left + rect.width / 2 - menuRect.width / 2)
+  );
+  const top = Math.max(margem, rect.top - menuRect.height - 6);
+
+  menu.style.left = left + "px";
+  menu.style.top = top + "px";
+}
+
+function rangeEhRegistro(range) {
+  return range && (range.tipo === "registro" || range.tipo === "registro-deletado");
+}
+
+function abrirMenuArquivo(elemento, byteIndex, range) {
+  esconderMenuArquivo();
+
+  const menu = document.createElement("div");
+  menu.className = "file-context-menu";
+  menu.setAttribute("role", "menu");
+
+  const editar = document.createElement("button");
+  editar.type = "button";
+  editar.textContent = "Editar elemento";
+  editar.dataset.fileMenuAction = "edit";
+  menu.appendChild(editar);
+
+  if (rangeEhRegistro(range)) {
+    const verRegistro = document.createElement("button");
+    verRegistro.type = "button";
+    verRegistro.textContent = "Ver registro";
+    verRegistro.dataset.fileMenuAction = "record";
+    menu.appendChild(verRegistro);
+  }
+
+  document.body.appendChild(menu);
+  estadoCrud.menuArquivo = { byteIndex, range, elemento };
+  reposicionarMenuArquivo(menu, elemento);
+}
+
+function iniciarEdicaoHex(elemento, byteIndex) {
+  if (!elemento || !Number.isInteger(byteIndex)) return;
+
+  esconderMenuArquivo();
+  const valorOriginal = toHex(estadoCrud.bytesAtuais[byteIndex]);
+  elemento.classList.add("hex-byte-editing");
+  elemento.textContent = "";
+
+  const input = document.createElement("input");
+  input.className = "hex-byte-input";
+  input.type = "text";
+  input.inputMode = "text";
+  input.maxLength = 2;
+  input.pattern = "[0-9A-Fa-f]{2}";
+  input.value = valorOriginal;
+  input.dataset.byteIndex = String(byteIndex);
+  input.dataset.valorOriginal = valorOriginal;
+  input.addEventListener("input", () => {
+    input.value = input.value.toUpperCase().replace(new RegExp("[^0-9A-F]", "g"), "").slice(0, 2);
+    input.classList.remove("input-error");
+  });
+
+  elemento.appendChild(input);
+  input.focus();
+  input.select();
+}
+
+function finalizarEdicaoHex(input, confirmar) {
+  const elemento = input.closest(".hex-byte");
+  if (!elemento) return;
+  const byteIndex = Number.parseInt(input.dataset.byteIndex, 10);
+  const valorOriginal = input.dataset.valorOriginal || "00";
+  const valor = input.value.trim().toUpperCase();
+
+  if (!confirmar) {
+    elemento.classList.remove("hex-byte-editing");
+    elemento.textContent = valorOriginal;
+    return;
+  }
+
+  if (valor.length !== 2 || new RegExp("[^0-9A-F]").test(valor)) {
+    input.classList.add("input-error");
+    input.focus();
+    input.select();
+    mostrarToast("Informe exatamente dois caracteres hexadecimais.", "danger");
+    return;
+  }
+
+  estadoCrud.bytesAtuais[byteIndex] = Number.parseInt(valor, 16);
+  if (!salvarBytesAtuaisNoArquivo()) {
+    estadoCrud.bytesAtuais[byteIndex] = Number.parseInt(valorOriginal, 16);
+    mostrarToast("Selecione uma entidade antes de editar bytes.", "danger");
+  } else {
+    mostrarToast("Byte " + byteIndex + " atualizado para " + valor + ".");
+  }
+
+  atualizarDadosArquivoSelecionado();
+  definirSelecao(obterRangePorByte(byteIndex));
+  if (estadoCrud.abaAtual === "decodificador") renderDecoder();
+  if (estadoCrud.abaAtual === "registros") renderizarRegistros();
+}
+
+function criarItemModalRegistro(rotulo, valor) {
+  const item = criarElemento("div", ["record-info-item"]);
+  item.append(
+    criarElemento("span", [], rotulo),
+    criarElemento("strong", [], String(valor ?? "-"))
+  );
+  return item;
+}
+
+function abrirModalRegistroArquivo(range) {
+  if (!rangeEhRegistro(range)) return;
+
+  crudModalTitle.textContent = range.id === null || range.id === undefined ? "Registro sem metadado" : "Registro " + range.id;
+  crudModalSubtitle.textContent = range.detalhe;
+  crudForm.innerHTML = "";
+  crudForm.classList.add("record-info-form");
+  setMensagemFormulario("");
+  collectCrudData.style.display = "none";
+
+  const metadados = range.metadados || {};
+  Object.entries(metadados).forEach(([rotulo, valor]) => {
+    crudForm.appendChild(criarItemModalRegistro(rotulo, valor));
+  });
+
+  crudModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
 }
 
 function criarChaveArquivo(entidade) {
@@ -306,6 +569,7 @@ function renderizarRegistros() {
 
     if (!entidade) {
         decoderContent.innerHTML = "<p>Nenhuma entidade selecionada.</p>";
+        aplicarInteracao();
         return;
     }
 
@@ -313,6 +577,7 @@ function renderizarRegistros() {
 
     if (!registros || registros.length === 0) {
         decoderContent.innerHTML = "<p>Nenhum registro encontrado.</p>";
+        aplicarInteracao();
         return;
     }
 
@@ -320,6 +585,7 @@ function renderizarRegistros() {
 
     if (registrosAtivos.length === 0) {
         decoderContent.innerHTML = "<p>Nenhum registro ativo encontrado.</p>";
+        aplicarInteracao();
         return;
     }
 
@@ -328,13 +594,10 @@ function renderizarRegistros() {
         const div = document.createElement("div");
         div.className = "registro-card";
         div.dataset.id = String(registro.id);
+        div.dataset.recordId = String(registro.id);
 
         div.innerHTML = `
             <div class="registro-main">
-                <div class="registro-header">
-                    <strong>ID ${registro.id}</strong>
-                    <span class="status ativo">Ativo</span>
-                </div>
                 <div class="registro-valores">
                     ${Object.entries(registro.valores)
                         .map(([k, v]) => `<div><b>${k}</b>: ${v}</div>`)
@@ -342,8 +605,9 @@ function renderizarRegistros() {
                 </div>
 
                 <div class="registro-info">
-                    <div><b>Criado:</b> ${new Date(registro.criadoEm).toLocaleString()}</div>
-                    <div><b>Atualizado:</b> ${new Date(registro.atualizadoEm).toLocaleString()}</div>
+                    <div><b>Origem:</b> vetor de bytes</div>
+                    <div><b>Endereco:</b> 0x${Number(registro.endereco).toString(16).toUpperCase().padStart(8, "0")}</div>
+                    <div><b>Tamanho:</b> ${registro.tamanho} bytes</div>
                 </div>
             </div>
             <div class="registro-actions">
@@ -354,6 +618,8 @@ function renderizarRegistros() {
 
         decoderContent.appendChild(div);
     });
+
+    aplicarInteracao();
 }
 
 function renderRegistro(registro) {
@@ -393,7 +659,6 @@ function criarOffsetHex(valor) {
 function sincronizarOffsetsHex() {
   const spacer = hexOffsets.querySelector(".hex-offset-spacer");
   const headerStyle = window.getComputedStyle(hexHeader);
-  spacer.style.height = `${hexHeader.offsetHeight + parseFloat(headerStyle.marginBottom || 0)}px`;
 
   const linhas = Array.from(hexRows.children);
   const offsets = Array.from(hexOffsets.querySelectorAll(".hex-offset"));
@@ -555,55 +820,17 @@ function renderDecoder() {
   const asciiView = document.createElement("div");
   asciiView.className = "ascii-view";
 
-  const gutter = document.createElement("div");
-  gutter.className = "ascii-gutter";
+  estadoCrud.bytesAtuais.forEach((byte, index) => {
+    const cell = document.createElement("span");
+    cell.className = "ascii-byte";
+    cell.textContent = formatarAscii(byte);
+    cell.dataset.byteIndex = String(index);
+    cell.title = `Offset 0x${index.toString(16).toUpperCase().padStart(8, "0")} | HEX ${toHex(byte)}`;
+    asciiView.appendChild(cell);
+  });
 
-  const gutterSpacer = document.createElement("div");
-  gutterSpacer.className = "ascii-offset-spacer";
-  gutter.appendChild(gutterSpacer);
-
-  const body = document.createElement("div");
-  body.className = "ascii-body";
-
-  const header = document.createElement("div");
-  header.className = "ascii-header-row";
-
-  for (let i = 0; i < 16; i++) {
-    const coluna = document.createElement("span");
-    coluna.className = "ascii-column-label";
-    coluna.textContent = toHex(i);
-    header.appendChild(coluna);
-  }
-
-  body.appendChild(header);
-
-  const bytesPorLinha = 16;
-  const rowCount = Math.ceil(estadoCrud.bytesAtuais.length / bytesPorLinha);
-
-  for (let r = 0; r < rowCount; r++) {
-    const enderecoInicial = r * bytesPorLinha;
-    const offset = document.createElement("div");
-    offset.className = "ascii-offset";
-    offset.textContent = enderecoInicial.toString(16).toUpperCase().padStart(8, "0");
-    gutter.appendChild(offset);
-
-    const row = document.createElement("div");
-    row.className = "ascii-data-row";
-
-    for (let c = 0; c < bytesPorLinha; c++) {
-      const idx = r * bytesPorLinha + c;
-      const cell = document.createElement("span");
-      cell.className = "ascii-byte";
-      cell.textContent = idx < estadoCrud.bytesAtuais.length ? formatarAscii(estadoCrud.bytesAtuais[idx]) : "";
-      if (idx >= estadoCrud.bytesAtuais.length) cell.classList.add("ascii-byte-empty");
-      row.appendChild(cell);
-    }
-
-    body.appendChild(row);
-  }
-
-  asciiView.append(gutter, body);
   decoderContent.appendChild(asciiView);
+  aplicarInteracao();
 }
 
 function formatarAscii(byte) {
@@ -657,6 +884,8 @@ function abrirModalCrud(acao, registroId = null) {
   estadoCrud.entidades = carregarEntidadesLocalStorage();
   const entidade = obterEntidadeSelecionada();
 
+  console.log(entidade, "Entidade selecionada para CRUD");
+
   if (!entidade) {
     mostrarToast("Selecione uma entidade na aba Entidades antes de usar o CRUD.", "danger");
     if (estadoCrud.abaAtual !== "entidades") {
@@ -668,17 +897,15 @@ function abrirModalCrud(acao, registroId = null) {
 
   estadoCrud.acaoAtual = acao;
   estadoCrud.registroSelecionadoId = registroId;
+  crudForm.classList.remove("record-info-form");
+  collectCrudData.style.display = "";
   crudModalTitle.textContent = `${CRUD_ACTION_LABELS[acao]} ${entidade.nome}`;
   crudModalSubtitle.textContent = acao === "create"
     ? "Campos gerados a partir dos metadados da entidade."
     : `Editando registro ${registroId}.`;
   crudForm.innerHTML = "";
   setMensagemFormulario("");
-  collectCrudData.textContent = acao === "create" ? "Obter dados" : "Salvar alteracoes";
-
-  if (acao !== "create" && !registroId) {
-    crudForm.appendChild(criarCampoIdRegistro());
-  }
+  collectCrudData.textContent = acao === "create" ? "Criar Registro" : "Salvar alteracoes";
 
   if (entidade.atributos.length === 0) {
     crudForm.appendChild(criarElemento("div", ["entity-empty"], "Esta entidade nao possui atributos cadastrados."));
@@ -701,7 +928,7 @@ function abrirModalCrud(acao, registroId = null) {
 
 function preencherFormularioRegistro(registroId) {
   const entidade = obterEntidadeSelecionada();
-  const registro = entidade && (entidade.registros || []).find((item) => Number(item.id) === Number(registroId));
+  const registro = obterRegistroPorId(entidade, registroId);
   if (!registro) return;
 
   entidade.atributos.forEach((atributo, index) => {
@@ -903,6 +1130,80 @@ window.VisualizerCrud = {
 renderizarHexView([]);
 renderDecoder();
 
+hexRows.addEventListener("mouseover", (evento) => {
+  const byte = evento.target.closest("[data-byte-index]");
+  if (!byte || !hexRows.contains(byte)) return;
+  definirHover(obterRangePorByte(Number.parseInt(byte.dataset.byteIndex, 10)));
+});
+
+hexRows.addEventListener("mouseout", (evento) => {
+  const byte = evento.target.closest("[data-byte-index]");
+  if (!byte || !hexRows.contains(byte)) return;
+  if (!byte.contains(evento.relatedTarget)) definirHover(null);
+});
+
+hexRows.addEventListener("click", (evento) => {
+  const byte = evento.target.closest("[data-byte-index]");
+  if (!byte || !hexRows.contains(byte)) return;
+  definirSelecao(obterRangePorByte(Number.parseInt(byte.dataset.byteIndex, 10)));
+});
+
+hexRows.addEventListener("contextmenu", (evento) => {
+  const byte = evento.target.closest(".hex-byte[data-byte-index]");
+  if (!byte || !hexRows.contains(byte)) return;
+
+  evento.preventDefault();
+  const byteIndex = Number.parseInt(byte.dataset.byteIndex, 10);
+  const range = obterRangePorByte(byteIndex);
+  definirSelecao(range);
+  abrirMenuArquivo(byte, byteIndex, range);
+});
+
+document.addEventListener("click", (evento) => {
+  const acaoMenu = evento.target.closest("[data-file-menu-action]");
+  if (acaoMenu) {
+    const estadoMenu = estadoCrud.menuArquivo;
+    if (acaoMenu.dataset.fileMenuAction === "edit") {
+      iniciarEdicaoHex(estadoMenu.elemento, estadoMenu.byteIndex);
+    }
+
+    if (acaoMenu.dataset.fileMenuAction === "record") {
+      abrirModalRegistroArquivo(estadoMenu.range);
+      esconderMenuArquivo();
+    }
+    return;
+  }
+
+  if (!evento.target.closest(".file-context-menu") && !evento.target.closest(".hex-byte-input")) {
+    esconderMenuArquivo();
+  }
+});
+
+document.addEventListener("keydown", (evento) => {
+  const inputHex = evento.target.closest ? evento.target.closest(".hex-byte-input") : null;
+  if (inputHex && evento.key === "Enter") {
+    evento.preventDefault();
+    finalizarEdicaoHex(inputHex, true);
+    return;
+  }
+
+  if (inputHex && evento.key === "Escape") {
+    evento.preventDefault();
+    finalizarEdicaoHex(inputHex, false);
+    return;
+  }
+
+  if (evento.key === "Escape") {
+    esconderMenuArquivo();
+  }
+});
+
+hexRows.addEventListener("focusout", (evento) => {
+  const inputHex = evento.target.closest(".hex-byte-input");
+  if (!inputHex) return;
+  finalizarEdicaoHex(inputHex, true);
+});
+
 document.querySelectorAll(".decoder-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".decoder-tab").forEach((t) => t.classList.remove("active"));
@@ -927,8 +1228,28 @@ document.querySelectorAll(".decoder-tab").forEach((tab) => {
   });
 });
 
+decoderContent.addEventListener("mouseover", (evento) => {
+  const byte = evento.target.closest(".ascii-byte[data-byte-index]");
+  if (byte && decoderContent.contains(byte)) {
+    definirHover(obterRangePorByte(Number.parseInt(byte.dataset.byteIndex, 10)));
+    return;
+  }
+
+  const registro = evento.target.closest(".registro-card[data-record-id]");
+  if (registro && decoderContent.contains(registro)) {
+    definirHover(obterRangePorRegistro(Number.parseInt(registro.dataset.recordId, 10)));
+  }
+});
+
+decoderContent.addEventListener("mouseout", (evento) => {
+  const alvoInterativo = evento.target.closest(".ascii-byte[data-byte-index], .registro-card[data-record-id]");
+  if (!alvoInterativo || !decoderContent.contains(alvoInterativo)) return;
+  if (!alvoInterativo.contains(evento.relatedTarget)) definirHover(null);
+});
+
 decoderContent.addEventListener("click", (evento) => {
   const acaoRegistro = evento.target.closest("[data-record-action]");
+  console.log(acaoRegistro);  
   if (acaoRegistro) {
     const id = Number.parseInt(acaoRegistro.dataset.id, 10);
     if (acaoRegistro.dataset.recordAction === "edit") abrirModalCrud("update", id);
@@ -936,10 +1257,24 @@ decoderContent.addEventListener("click", (evento) => {
     return;
   }
 
+  const byte = evento.target.closest(".ascii-byte[data-byte-index]");
+  if (byte) {
+    definirSelecao(obterRangePorByte(Number.parseInt(byte.dataset.byteIndex, 10)));
+    return;
+  }
+
+  const registroTabela = evento.target.closest(".registro-card[data-record-id]");
+  if (registroTabela) {
+    selecionarRegistroPorId(Number.parseInt(registroTabela.dataset.recordId, 10));
+    return;
+  }
+
   const card = evento.target.closest(".decoder-entity-card");
   if (!card) return;
 
   estadoCrud.entidadeSelecionadaId = card.dataset.id;
+  estadoCrud.interacao.hover = null;
+  estadoCrud.interacao.selected = null;
   atualizarDadosArquivoSelecionado();
   renderizarEntidadesDecoder();
   if (estadoCrud.abaAtual === "decodificador") {
