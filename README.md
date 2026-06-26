@@ -4,6 +4,7 @@
 **Ciência da Computação**
 
 Video de demonstração do projeto: 
+Link para teste com os usuários e relatório: https://github.com/Pedro-Italo-BC/Visualizer---tp-04/blob/main/.docs/usuarios.md
 
 **Autores:**  
 Ane M. Viana  
