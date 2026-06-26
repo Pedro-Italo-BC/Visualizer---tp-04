@@ -399,6 +399,54 @@ hr.divider {
     border-color: #f1c40f; /* amarelo forte */
 }
 
+.criador:nth-child(5) img {
+    border-color: #f1c40f; /* amarelo forte */
+}
+
+#kutova img{
+  border-color: #f1c40f; /* amarelo forte */
+}
+
+.tutorial-section {
+    display: flex;
+    justify-content: center; /* centraliza tudo */
+    align-items: flex-start;
+    gap: 80px; /* 👈 essa é a “separaçãozinha” */
+    padding: 40px;
+    flex-wrap: wrap; /* responsivo */
+}
+
+/* cada bloco */
+.box {
+    text-align: center;
+}
+
+/* linha das bolinhas */
+.criadores {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* bolinhas */
+.criador img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+/* nomes */
+.criador::after {
+    content: attr(data-name);
+    display: block;
+    margin-top: 10px;
+    font-weight: 600;
+}
+
 .tutorial-creators {
     text-align: center;
 }
