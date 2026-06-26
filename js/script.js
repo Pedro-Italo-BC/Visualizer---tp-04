@@ -677,8 +677,8 @@ function renderizarHexView(bytes, entidade = null) {
   const vetor = Array.isArray(bytes) ? bytes.map(normalizarByte) : [];
   estadoCrud.bytesAtuais = vetor;
 
-  hexOffsets.innerHTML = "";
-  hexRows.innerHTML = "";
+  hexOffsets.replaceChildren();
+  hexRows.replaceChildren();
   renderizarCabecalhoHex();
 
   hexEntityName.textContent = entidade ? entidade.nome : "Nenhuma entidade selecionada";

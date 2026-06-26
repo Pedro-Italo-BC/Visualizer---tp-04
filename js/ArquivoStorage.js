@@ -250,31 +250,30 @@ const ArquivoStorage = (() => {
         }
     }
 
+    function escreverTamanhoRegistro(arquivo, offset, tamanhoBytes) {
+        const tamanho = Math.max(0, Math.min(0x7fff, Number(tamanhoBytes) || 0));
+        escreverShort(arquivo, offset, tamanho);
+        return tamanho;
+    }
+
     function escreverRegistroNoFim(arquivo, bytes) {
         const endereco = arquivo.length;
         arquivo.push(LAPIDE_ATIVO);
-        escreverShort(arquivo, arquivo.length, bytes.length);
+        escreverTamanhoRegistro(arquivo, endereco + TAM_LAPIDE, bytes.length);
         arquivo.push(...bytes.map(normalizarByte));
         return endereco;
     }
 
     function escreverRegistroReaproveitado(arquivo, endereco, bytes) {
-        const tamanhoOriginal = lerShort(arquivo, endereco + TAM_LAPIDE);
+        const tamanhoAnterior = lerShort(arquivo, endereco + TAM_LAPIDE);
         arquivo[endereco] = LAPIDE_ATIVO;
+        escreverTamanhoRegistro(arquivo, endereco + TAM_LAPIDE, bytes.length);
+        escreverBytes(arquivo, endereco + TAM_LAPIDE + TAM_TAMANHO, bytes);
 
-        // Se o novo payload couber no espaço existente, mantenha o tamanho
-        // original do slot para evitar deslocar os registros seguintes.
-        if (bytes.length <= tamanhoOriginal) {
-            escreverBytes(arquivo, endereco + TAM_LAPIDE + TAM_TAMANHO, bytes);
-            const inicioPad = endereco + TAM_LAPIDE + TAM_TAMANHO + bytes.length;
-            const fimPad = endereco + TAM_LAPIDE + TAM_TAMANHO + tamanhoOriginal;
-            for (let i = inicioPad; i < fimPad; i++) {
-                arquivo[i] = 0;
-            }
-        } else {
-            // Precisa de mais espaço: atualiza o campo tamanho e escreve.
-            escreverShort(arquivo, endereco + TAM_LAPIDE, bytes.length);
-            escreverBytes(arquivo, endereco + TAM_LAPIDE + TAM_TAMANHO, bytes);
+        const fimPayload = endereco + TAM_LAPIDE + TAM_TAMANHO + bytes.length;
+        const fimSlot = endereco + TAM_LAPIDE + TAM_TAMANHO + Math.max(tamanhoAnterior, bytes.length);
+        for (let i = fimPayload; i < fimSlot; i++) {
+            arquivo[i] = 0;
         }
     }
 
